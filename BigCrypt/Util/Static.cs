@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace BigCrypt.Util;
@@ -9,14 +8,6 @@ namespace BigCrypt.Util;
 /// </summary>
 public static class Static
 {
-    /// <summary>
-    /// Creates a <see cref="Business.Ref{T}"/> by adding an offset to a reference
-    /// </summary>
-    /// <typeparam name="T">The type pointed to by the reference</typeparam>
-    /// <param name="value">The reference to the value</param>
-    /// <param name="offset">The offset by which to move the reference forward</param>
-    public static Ref<T> Ref<T>(ref T value, long offset) => new(ref Unsafe.Add(ref value, (UIntPtr)offset));
-
     /// <summary>
     /// Executs both a division and a modulus between <paramref name="a"/> and <paramref name="b"/>
     /// </summary>

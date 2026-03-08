@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Numerics;
+using BigCrypt.Business;
 using BigCrypt.Util;
 
 const int KB = 1024, MIN_THREAD_SIZE = 10 * KB;
@@ -34,8 +34,8 @@ if (mmapInp.Size is 0)
     return 3;
 }
 
-var randomKey = !File.Exists(pathKey);
-using var mmapKey = randomKey ? Mmap.Create(pathKey, mmapInp.Size) : Mmap.Open(pathKey);
+var generateKey = !File.Exists(pathKey);
+using var mmapKey = generateKey ? Mmap.Create(pathKey, mmapInp.Size) : Mmap.Open(pathKey);
 using var mmapOut = Mmap.Create(pathOut, mmapInp.Size);
 
 var source = new CancellationTokenSource();
@@ -47,7 +47,11 @@ var display = Task.Run(ShowProgress);
 try
 {
     var thread = Math.Min(Environment.ProcessorCount, Math.Max(1, mmapInp.Size / MIN_THREAD_SIZE));
-    Static.Partition(thread, mmapInp.Size, ProcessThread);
+    Static.Partition(thread, mmapInp.Size, (offset, size) =>
+    {
+        var req = new Req(ref mmapInp.First, ref mmapKey.First, ref mmapOut.First, ref progress, generateKey);
+        Crypt.Xor(req, offset, size, mmapKey.Size);
+    });
 }
 finally
 {
@@ -59,65 +63,6 @@ await display;
 return 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void ProcessThread(long offset, long size)
-{
-    var chunk = mmapKey.Size;
-    var start = offset % chunk;
-    var available = chunk - start;
-
-    // Avoids using the "PacMan Effect" if the key is long enough to end this chunk
-    if (size <= available)
-    {
-        ProcessChunk(offset, start, size);
-        return;
-    }
-
-    // Uses the remaining part of the key
-    ProcessChunk(offset, start, available);
-    offset += available;
-    size -= available;
-
-    // Uses the whole key until a smaller chunk is needed
-    var count = Static.DivMod(size, chunk, out var extra);
-    for (long i = 0; i < count; i++, offset += chunk)
-        ProcessChunk(offset, 0, chunk);
-
-    // Processes the remaining part of the input, if any
-    if (extra is 0) return;
-    ProcessChunk(offset, 0, extra);
-}
-
-void ProcessChunk(long offsetInp, long offsetKey, long size)
-{
-    // Setup of the references at the beginning of the chunk
-    var byteInp = Static.Ref(ref mmapInp.First, offsetInp);
-    var byteKey = Static.Ref(ref mmapKey.First, offsetKey);
-    var byteOut = Static.Ref(ref mmapOut.First, offsetInp);
-
-    // Key generation
-    // The "PacMan Effect" only happens on pre-existing keys, so the generation of the random one doesn't cause race conditions
-    if (randomKey) Static.Random(ref byteKey.Value, size);
-
-    // Setup of the SIMD references
-    ref var vecInp = ref byteInp.As<Vector<byte>>(size, out var countVec, out var countExtra);
-    ref var vecKey = ref byteKey.As<Vector<byte>>(size, out _, out _);
-    ref var vecOut = ref byteOut.As<Vector<byte>>(size, out _, out _);
-
-    // Vectorized loop
-    for (long i = 0; i < countVec; i++, vecInp.Next(), vecKey.Next(), vecOut.Next())
-    {
-        vecOut.Value = vecInp.Value ^ vecKey.Value;
-
-        Interlocked.Add(ref progress, Vector<byte>.Count);
-    }
-
-    // Scalar loop
-    for (var i = 0; i < countExtra; i++, byteInp.Next(), byteKey.Next(), byteOut.Next())
-        byteOut.Value = (byte)(byteInp.Value ^ byteKey.Value);
-
-    Interlocked.Add(ref progress, countExtra);
-}
 
 async Task ShowProgress()
 {
