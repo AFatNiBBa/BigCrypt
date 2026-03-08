@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace BigCrypt.Business;
+namespace BigCrypt.Util;
 
 /// <summary>
 /// Splits a contiguous sequence of <typeparamref name="T"/>s into chunks of size <paramref name="chunk"/> and wraps each of them in a <see cref="Span{T}"/>
@@ -22,7 +22,7 @@ public ref struct SpanChunkEnumerator<T>(ref T first, long count, int chunk)
 
     public bool MoveNext()
     {
-        var div = Util.DivMod(count, chunk, out var mod);
+        var div = Static.DivMod(count, chunk, out var mod);
         if (_index > div) return false;
         ref var next = ref Unsafe.Add(ref _first, (UIntPtr)(_index * chunk));
         var length = _index < div ? chunk : (int)mod;

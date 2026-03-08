@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace BigCrypt.Business;
+namespace BigCrypt.Util;
 
 /// <summary>
 /// Utility wrapper over a reference
@@ -26,7 +26,7 @@ public ref struct Ref<T>(ref T value)
     public ref Ref<R> As<R>(long countInp, out long countOut, out long extraBytes)
     {
         var size = countInp * Unsafe.SizeOf<T>();
-        countOut = Util.DivMod(size, Unsafe.SizeOf<R>(), out extraBytes);
+        countOut = Static.DivMod(size, Unsafe.SizeOf<R>(), out extraBytes);
         return ref Unsafe.As<Ref<T>, Ref<R>>(ref Unsafe.AsRef(in this));
     }
 }

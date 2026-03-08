@@ -2,7 +2,7 @@
 using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 
-namespace BigCrypt.Business;
+namespace BigCrypt.Util;
 
 /// <summary>
 /// Utility wrapper over <see cref="MemoryMappedFile"/> and <see cref="MemoryMappedViewAccessor"/> that provides a reference to the first byte of the mapped memory.

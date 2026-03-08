@@ -1,6 +1,6 @@
-﻿using BigCrypt.Business;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Numerics;
+using BigCrypt.Util;
 
 const int KB = 1024, MIN_THREAD_SIZE = 10 * KB;
 
@@ -47,7 +47,7 @@ var display = Task.Run(ShowProgress);
 try
 {
     var thread = Math.Min(Environment.ProcessorCount, Math.Max(1, mmapInp.Size / MIN_THREAD_SIZE));
-    Util.Partition(thread, mmapInp.Size, ProcessThread);
+    Static.Partition(thread, mmapInp.Size, ProcessThread);
 }
 finally
 {
@@ -79,7 +79,7 @@ void ProcessThread(long offset, long size)
     size -= available;
 
     // Uses the whole key until a smaller chunk is needed
-    var count = Util.DivMod(size, chunk, out var extra);
+    var count = Static.DivMod(size, chunk, out var extra);
     for (long i = 0; i < count; i++, offset += chunk)
         ProcessChunk(offset, 0, chunk);
 
@@ -91,13 +91,13 @@ void ProcessThread(long offset, long size)
 void ProcessChunk(long offsetInp, long offsetKey, long size)
 {
     // Setup of the references at the beginning of the chunk
-    var byteInp = Util.Ref(ref mmapInp.First, offsetInp);
-    var byteKey = Util.Ref(ref mmapKey.First, offsetKey);
-    var byteOut = Util.Ref(ref mmapOut.First, offsetInp);
+    var byteInp = Static.Ref(ref mmapInp.First, offsetInp);
+    var byteKey = Static.Ref(ref mmapKey.First, offsetKey);
+    var byteOut = Static.Ref(ref mmapOut.First, offsetInp);
 
     // Key generation
     // The "PacMan Effect" only happens on pre-existing keys, so the generation of the random one doesn't cause race conditions
-    if (randomKey) Util.Random(ref byteKey.Value, size);
+    if (randomKey) Static.Random(ref byteKey.Value, size);
 
     // Setup of the SIMD references
     ref var vecInp = ref byteInp.As<Vector<byte>>(size, out var countVec, out var countExtra);

@@ -2,12 +2,12 @@
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
-namespace BigCrypt.Business;
+namespace BigCrypt.Util;
 
 /// <summary>
 /// Utility functions
 /// </summary>
-public static class Util
+public static class Static
 {
     /// <summary>
     /// Creates a <see cref="Business.Ref{T}"/> by adding an offset to a reference
