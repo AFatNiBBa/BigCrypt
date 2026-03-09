@@ -22,6 +22,31 @@ public static class Static
     }
 
     /// <summary>
+    /// Writes the contents <paramref name="source"/> into <paramref name="dest"/> and advances <paramref name="dest"/> by the length of <paramref name="source"/>
+    /// </summary>
+    /// <typeparam name="T">The type of the elements of the two sequences</typeparam>
+    /// <param name="dest">The destination sequence</param>
+    /// <param name="source">The source sequence</param>
+    public static void Write<T>(ref Span<T> dest, ReadOnlySpan<T> source)
+    {
+        source.CopyTo(dest);
+        dest = dest[source.Length..];
+    }
+
+    /// <summary>
+    /// Writes <paramref name="value"/> <paramref name="count"/> times into <paramref name="dest"/> and advances <paramref name="dest"/> by <paramref name="count"/>
+    /// </summary>
+    /// <typeparam name="T">The type of the elements of the two sequences</typeparam>
+    /// <param name="dest">The destination sequence</param>
+    /// <param name="value">The value to write into the sequence</param>
+    /// <param name="count">The number of times to write the value</param>
+    public static void Write<T>(ref Span<T> dest, T value, int count)
+    {
+        dest[..count].Fill(value);
+        dest = dest[count..];
+    }
+
+    /// <summary>
     /// Fills a contiguous block of memory with random bytes.
     /// Splits the block of memory into <see cref="Span{T}"/>s and runs <see cref="RandomNumberGenerator.Fill"/> on each of them
     /// </summary>

@@ -70,7 +70,7 @@ async Task ShowProgress()
     {
         while (!source.IsCancellationRequested)
         {
-            Console.Write(bar.ToString());
+            bar.WriteToConsole();
             await Task.Delay(1000, source.Token);
         }
     }
@@ -79,7 +79,7 @@ async Task ShowProgress()
         // Skip
     }
 
-    Console.Write(Bar.ToString(1, 1));
+    Bar.WriteToConsole(1, 1);
     Console.WriteLine();
     Console.WriteLine($"Operation completed in {sw.Elapsed.TotalMilliseconds}ms");
 }

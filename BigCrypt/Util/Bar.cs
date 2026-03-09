@@ -9,21 +9,48 @@ public class Bar(long total)
     public long Value;
 
     /// <summary>
-    /// Creates a string containing a textual representation of the current progress bar
+    /// Writes the current progress bar to the <see cref="Console"/>
     /// </summary>
-    public override string ToString() => ToString(Value, total);
+    public void WriteToConsole() => WriteToConsole(Value, total);
 
     /// <summary>
-    /// Creates a string containing a textual progress bar
+    /// Writes a textual progress bar to the <see cref="Console"/>
     /// </summary>
     /// <param name="value">The value of the progress bar</param>
     /// <param name="total">The total of the progress bar</param>
-    public static string ToString(long value, long total)
+    public static void WriteToConsole(long value, long total)
     {
-        const string prefix = "[";
-        var suffix = $"] {(double)value * 100 / total:000.000}%";
-        var available = Console.WindowWidth - prefix.Length - suffix.Length;
-        var full = (int)(value * available / total);
-        return $"\r{prefix}{new string('█', full)}{new string('▒', available - full)}{suffix}";
+        const string RESTORE = "\r";
+        Span<char> dest = stackalloc char[RESTORE.Length + Console.WindowWidth];
+        RESTORE.CopyTo(dest);
+        if (!TryWrite(dest[RESTORE.Length..], value, total)) return;
+        Console.Write(dest);
     }
+
+    /// <summary>
+    /// Writes a textual progress bar to a <see cref="Span{T}"/>
+    /// </summary>
+    /// <param name="dest">The destination in which to try to write the progress bar</param>
+    /// <param name="value">The value of the progress bar</param>
+    /// <param name="total">The total of the progress bar</param>
+    public static bool TryWrite(Span<char> dest, long value, long total)
+    {
+        const string PREFIX = "[", SUFFIX = "] ", FORMAT = "000.0000", PERC = "%";
+        const char FULL = '█', EMPTY = '▒';
+
+        var minLength = PREFIX.Length + SUFFIX.Length + FORMAT.Length + PERC.Length;
+        if (dest.Length < minLength) return false;
+        Static.Write(ref dest, PREFIX);
+        var available = dest.Length - minLength;
+        var full = (int)(value * available / total);
+        Static.Write(ref dest, FULL, full);
+        Static.Write(ref dest, EMPTY, available - full);
+        Static.Write(ref dest, SUFFIX);
+        var perc = (double)value * 100 / total;
+        if (!perc.TryFormat(dest, out var written, FORMAT)) return false;
+        if (written != FORMAT.Length) return false;
+        PERC.CopyTo(dest[written..]);
+        return true;
+    }
+
 }
