@@ -21,10 +21,11 @@ public class Bar(long total)
     public static void WriteToConsole(long value, long total)
     {
         const string RESTORE = "\r";
-        Span<char> dest = stackalloc char[RESTORE.Length + Console.WindowWidth];
-        RESTORE.CopyTo(dest);
-        if (!TryWrite(dest[RESTORE.Length..], value, total)) return;
-        Console.Write(dest);
+        Span<char> res = stackalloc char[RESTORE.Length + Console.WindowWidth];
+        var dest = res;
+        Static.Write(ref dest, RESTORE);
+        if (!TryWrite(dest, value, total)) return;
+        Console.Write(res);
     }
 
     /// <summary>
@@ -38,10 +39,10 @@ public class Bar(long total)
         const string PREFIX = "[", SUFFIX = "] ", FORMAT = "000.0000", PERC = "%";
         const char FULL = '█', EMPTY = '▒';
 
-        var minLength = PREFIX.Length + SUFFIX.Length + FORMAT.Length + PERC.Length;
-        if (dest.Length < minLength) return false;
+        var min = PREFIX.Length + SUFFIX.Length + FORMAT.Length + PERC.Length;
+        if (dest.Length < min) return false;
+        var available = dest.Length - min; // I take the length before I "shrink" the destination
         Static.Write(ref dest, PREFIX);
-        var available = dest.Length - minLength;
         var full = (int)(value * available / total);
         Static.Write(ref dest, FULL, full);
         Static.Write(ref dest, EMPTY, available - full);
