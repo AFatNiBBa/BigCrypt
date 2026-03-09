@@ -39,8 +39,8 @@ using var mmapKey = generateKey ? Mmap.Create(pathKey, mmapInp.Size) : Mmap.Open
 using var mmapOut = Mmap.Create(pathOut, mmapInp.Size);
 
 var source = new CancellationTokenSource();
+var bar = new Bar(mmapInp.Size);
 var sw = Stopwatch.StartNew();
-var progress = 0L;
 
 var display = Task.Run(ShowProgress);
 
@@ -49,7 +49,7 @@ try
     var thread = Math.Min(Environment.ProcessorCount, Math.Max(1, mmapInp.Size / MIN_THREAD_SIZE));
     Static.Partition(thread, mmapInp.Size, (offset, size) =>
     {
-        var req = new Req(ref mmapInp.First, ref mmapKey.First, ref mmapOut.First, ref progress, generateKey);
+        var req = new Req(ref mmapInp.First, ref mmapKey.First, ref mmapOut.First, ref bar.Value, generateKey);
         Crypt.Xor(req, offset, size, mmapKey.Size);
     });
 }
@@ -66,15 +66,11 @@ return 0;
 
 async Task ShowProgress()
 {
-    var prev = 0;
-
     try
     {
         while (!source.IsCancellationRequested)
         {
-            var text = $"\r{(double)progress * 100 / mmapInp.Size}%";
-            Console.Write(text.PadRight(prev, ' '));
-            prev = text.Length;
+            Console.Write(bar.ToString());
             await Task.Delay(1000, source.Token);
         }
     }
@@ -83,6 +79,7 @@ async Task ShowProgress()
         // Skip
     }
 
+    Console.Write(Bar.ToString(1, 1));
     Console.WriteLine();
     Console.WriteLine($"Operation completed in {sw.Elapsed.TotalMilliseconds}ms");
 }
