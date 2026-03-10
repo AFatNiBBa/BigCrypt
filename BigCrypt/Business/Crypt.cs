@@ -10,7 +10,7 @@ public static class Crypt
 {
     /// <summary>
     /// Applies the bitwise XOR operation on a chunk of data.
-    /// Handles the "PacMan" effect if the key is not long enough to last until the end of the chunk
+    /// Handles the "PacMan Effect" if the key is not long enough to last until the end of the chunk
     /// </summary>
     /// <param name="req">The request containing the references to the memory blocks to use in order to perform the operation</param>
     /// <param name="offset">The offset of the chunk</param>
