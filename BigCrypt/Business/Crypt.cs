@@ -29,7 +29,7 @@ public static class Crypt
         }
 
         // Throws if the key needs to be generated, otherwise it would cause race conditions, size the "PacMan Effect" allows multiple threads to use the same blocks of memory
-        if (req.GenerateKey) 
+        if (req.Random) 
             throw new InvalidOperationException("The key needs to be pre-generated when the size of the chunk is bigger than the size of the key");
 
         // Uses the remaining part of the key
@@ -60,7 +60,7 @@ public static class Crypt
         var byteOut = new Ref<byte>(ref req.ByteOut);
 
         // Key generation
-        if (req.GenerateKey) Static.Random(ref byteKey.Value, size);
+        if (req.Random) Static.Random(ref byteKey.Value, size);
 
         // Setup of the SIMD references
         ref var vecInp = ref byteInp.As<Vector<byte>>(size, out var countVec, out var countExtra);

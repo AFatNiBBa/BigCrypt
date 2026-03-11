@@ -9,8 +9,8 @@ namespace BigCrypt.Business;
 /// <param name="byteKey">The reference to the first byte of the key data</param>
 /// <param name="byteOut">The reference to the first byte of the output data</param>
 /// <param name="progress">The reference to the counter of already processed data</param>
-/// <param name="generateKey">Whether to generate the key instead of reading it from file</param>
-public readonly ref struct Req(ref byte byteInp, ref byte byteKey, ref byte byteOut, ref long progress, bool generateKey)
+/// <param name="random">Whether to generate the key instead of reading it from file</param>
+public readonly ref struct Req(ref byte byteInp, ref byte byteKey, ref byte byteOut, ref long progress, bool random)
 {
     public readonly ref byte ByteInp = ref byteInp;
 
@@ -20,7 +20,7 @@ public readonly ref struct Req(ref byte byteInp, ref byte byteKey, ref byte byte
 
     public readonly ref long Progress = ref progress;
 
-    public readonly bool GenerateKey = generateKey;
+    public readonly bool Random = random;
 
     /// <summary>
     /// Creates a new request with the references moved by the specified offsets
@@ -32,6 +32,6 @@ public readonly ref struct Req(ref byte byteInp, ref byte byteKey, ref byte byte
         ref var byteInp = ref Unsafe.Add(ref ByteInp, (UIntPtr)offsetInp);
         ref var byteKey = ref Unsafe.Add(ref ByteKey, (UIntPtr)offsetKey);
         ref var byteOut = ref Unsafe.Add(ref ByteOut, (UIntPtr)offsetInp);
-        return new(ref byteInp, ref byteKey, ref byteOut, ref Progress, GenerateKey);
+        return new(ref byteInp, ref byteKey, ref byteOut, ref Progress, Random);
     }
 }

@@ -1,52 +1,75 @@
-﻿using BigCrypt.Business;
-using BigCrypt.Util;
+﻿using System.CommandLine;
+using BigCrypt;
 
-const int KB = 1024, MIN_THREAD_SIZE = 10 * KB;
+var argInput = new Argument<FileInfo>("input") { Description = "The input file" };
+var argKey = new Argument<FileInfo>("key") { Description = "The key file" };
+var argOutput = new Argument<FileInfo>("output") { Description = "The output file", Arity = ArgumentArity.ZeroOrOne };
+var argSize = new Argument<long>("size") { Description = "The size of the random data to generate" };
+var argRandom = new Option<bool>("--random", "-r") { Description = "Generate a random key" };
 
-if (args is not [ var pathInp, var pathKey, var pathOut]) {
-#if DEBUG
-    pathInp = "./inp.dat";
-    pathKey = "./key.dat";
-    pathOut = "./out.dat";
-    
-#if false
-    (pathInp, pathOut) = (pathOut, pathInp);
-#endif
-
-#else
-    Console.WriteLine($"Usage: {Environment.GetCommandLineArgs()[0]} <pathInp> <pathKey> <pathOut>");
-    return 1; 
-#endif
-}
-
-if (!File.Exists(pathInp))
+var cmdXor = new Command("xor", "Performs the bitwise XOR operation between the input and key file and writes the result to the output one")
 {
-    Console.WriteLine("The input file does not exist");
-    return 2;
-}
+    argInput,
+    argKey,
+    argOutput,
+    argRandom
+};
 
-using var mmapInp = Mmap.Open(pathInp);
-
-if (mmapInp.Size is 0)
+cmdXor.SetAction(async x =>
 {
-    Console.WriteLine("The input file is empty");
-    return 3;
-}
+    var input = x.GetRequiredValue(argInput);
+    var key = x.GetRequiredValue(argKey);
+    var output = x.GetValue(argOutput);
+    var random = x.GetValue(argRandom);
 
-var generateKey = !File.Exists(pathKey);
-using var mmapKey = generateKey ? Mmap.Create(pathKey, mmapInp.Size) : Mmap.Open(pathKey);
-using var mmapOut = Mmap.Create(pathOut, mmapInp.Size);
-
-var bar = new Bar(mmapInp.Size);
-
-await using (Progress.Report(bar))
-{
-    var thread = Math.Min(Environment.ProcessorCount, Math.Max(1, mmapInp.Size / MIN_THREAD_SIZE));
-    Static.Partition(thread, mmapInp.Size, (offset, size) =>
+    if (!input.Exists)
     {
-        var req = new Req(ref mmapInp.First, ref mmapKey.First, ref mmapOut.First, ref bar.Value, generateKey);
-        Crypt.Xor(req, offset, size, mmapKey.Size);
-    });
-}
+        Console.WriteLine("The input file does not exist");
+        return 1;
+    }
 
-return 0;
+    if (input.Length is 0)
+    {
+        Console.WriteLine("The input file is empty");
+        return 2;
+    }
+
+    if (!random)
+    {
+        if (!key.Exists)
+        {
+            Console.WriteLine("The key file does not exist");
+            return 3;
+        }
+
+        if (key.Length is 0)
+        {
+            Console.WriteLine("The key file is empty");
+            return 4;
+        }
+    }
+
+    await Cli.Xor(input.FullName, key.FullName, output?.FullName, random);
+    return 0;
+});
+
+var cmdRnd = new Command("rnd", "Generates a random key of the given size")
+{
+    argKey,
+    argSize
+};
+
+cmdRnd.SetAction(res =>
+{
+    var key = res.GetRequiredValue(argKey);
+    var size = res.GetRequiredValue(argSize);
+    return Cli.Rnd(key.FullName, size);
+});
+
+var root = new RootCommand("Fast One-Time Pad")
+{
+    cmdXor,
+    cmdRnd
+};
+
+return await root.Parse(args).InvokeAsync();
