@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using BigCrypt.Business;
+﻿using BigCrypt.Business;
 using BigCrypt.Util;
 
 const int KB = 1024, MIN_THREAD_SIZE = 10 * KB;
@@ -22,7 +21,7 @@ if (args is not [ var pathInp, var pathKey, var pathOut]) {
 
 if (!File.Exists(pathInp))
 {
-    Console.WriteLine("There's no input file");
+    Console.WriteLine("The input file does not exist");
     return 2;
 }
 
@@ -38,13 +37,9 @@ var generateKey = !File.Exists(pathKey);
 using var mmapKey = generateKey ? Mmap.Create(pathKey, mmapInp.Size) : Mmap.Open(pathKey);
 using var mmapOut = Mmap.Create(pathOut, mmapInp.Size);
 
-var source = new CancellationTokenSource();
 var bar = new Bar(mmapInp.Size);
-var sw = Stopwatch.StartNew();
 
-var display = Task.Run(ShowProgress);
-
-try
+await using (Progress.Report(bar))
 {
     var thread = Math.Min(Environment.ProcessorCount, Math.Max(1, mmapInp.Size / MIN_THREAD_SIZE));
     Static.Partition(thread, mmapInp.Size, (offset, size) =>
@@ -53,33 +48,5 @@ try
         Crypt.Xor(req, offset, size, mmapKey.Size);
     });
 }
-finally
-{
-    source.Cancel();
-}
-
-await display;
 
 return 0;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-async Task ShowProgress()
-{
-    try
-    {
-        while (!source.IsCancellationRequested)
-        {
-            bar.WriteToConsole();
-            await Task.Delay(1000, source.Token);
-        }
-    }
-    catch (OperationCanceledException)
-    {
-        // Skip
-    }
-
-    Bar.WriteToConsole(1, 1);
-    Console.WriteLine();
-    Console.WriteLine($"Operation completed in {sw.Elapsed.TotalMilliseconds}ms");
-}

@@ -53,5 +53,4 @@ public class Bar(long total)
         PERC.CopyTo(dest[written..]);
         return true;
     }
-
 }
