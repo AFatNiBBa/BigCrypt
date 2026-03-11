@@ -9,6 +9,8 @@ namespace BigCrypt.Util;
 /// </summary>
 public static class Static
 {
+    public const int KB = 1024;
+
     /// <summary>
     /// Offsets a reference by the given amount of <typeparamref name="T"/> values and checks for overflows
     /// </summary>

@@ -1,11 +1,33 @@
-﻿using System.CommandLine;
-using BigCrypt;
+﻿using BigCrypt;
+using BigCrypt.Util;
+using System.CommandLine;
 
 var argInput = new Argument<FileInfo>("input") { Description = "The input file" };
 var argKey = new Argument<FileInfo>("key") { Description = "The key file" };
 var argOutput = new Argument<FileInfo>("output") { Description = "The output file", Arity = ArgumentArity.ZeroOrOne };
-var argSize = new Argument<long>("size") { Description = "The size of the random data to generate" };
+
 var argRandom = new Option<bool>("--random", "-r") { Description = "Generate a random key" };
+
+var argSize = new Argument<long>("size")
+{
+    Description = "The size of the random data to generate",
+    CustomParser = x =>
+    {
+        var span = x.Tokens[0].Value.AsSpan();
+        long multiplier;
+
+        if (span.EndsWith("kb", StringComparison.InvariantCultureIgnoreCase))
+            multiplier = Static.KB;
+        else if (span.EndsWith("mb", StringComparison.InvariantCultureIgnoreCase))
+            multiplier = Static.KB * Static.KB;
+        else if (span.EndsWith("gb", StringComparison.InvariantCultureIgnoreCase))
+            multiplier = Static.KB * Static.KB * Static.KB;
+        else
+            return long.Parse(span);
+
+        return multiplier * long.Parse(span[..^2]);
+    }
+};
 
 var cmdXor = new Command("xor", "Performs the bitwise XOR operation between the input and key file and writes the result to the output one")
 {

@@ -9,7 +9,7 @@ namespace BigCrypt;
 /// </summary>
 internal static class Cli
 {
-    private const int KB = 1024, MIN_THREAD_SIZE = 10 * KB;
+    private const int MIN_THREAD_SIZE = 10 * Static.KB;
 
     /// <summary>
     /// Performs the bitwise XOR operation between the input and key file and writes the result to the output one
