@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace BigCrypt.Util;
@@ -8,6 +9,14 @@ namespace BigCrypt.Util;
 /// </summary>
 public static class Static
 {
+    /// <summary>
+    /// Offsets a reference by the given amount of <typeparamref name="T"/> values and checks for overflows
+    /// </summary>
+    /// <typeparam name="T">The type of the value pointed at by the sequence</typeparam>
+    /// <param name="first">The reference to offset</param>
+    /// <param name="offset">The number of <typeparamref name="T"/> by which to offset the reference</param>
+    public static ref T Offset<T>(ref T first, long offset) => ref Unsafe.Add(ref first, checked((UIntPtr)offset));
+
     /// <summary>
     /// Executs both a division and a modulus between <paramref name="a"/> and <paramref name="b"/>
     /// </summary>

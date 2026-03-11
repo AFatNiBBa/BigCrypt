@@ -1,6 +1,4 @@
 
 dopo essere arrivato al 100%, comunque ci impiega un bel po' a finire
 
-cambia ~tutti i numeri in uintptr > (così comunica che dipende dall'architettura il comportamento)
-
 "crypt rnd <key> <size>" > permetti "kb", "mb", "gb" come suffissi per "size"

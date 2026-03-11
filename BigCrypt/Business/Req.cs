@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using BigCrypt.Util;
 
 namespace BigCrypt.Business;
 
@@ -29,9 +29,9 @@ public readonly ref struct Req(ref byte byteInp, ref byte byteKey, ref byte byte
     /// <param name="offsetKey">The offset to apply to the key reference</param>
     public Req Move(long offsetInp, long offsetKey)
     {
-        ref var byteInp = ref Unsafe.Add(ref ByteInp, (UIntPtr)offsetInp);
-        ref var byteKey = ref Unsafe.Add(ref ByteKey, (UIntPtr)offsetKey);
-        ref var byteOut = ref Unsafe.Add(ref ByteOut, (UIntPtr)offsetInp);
+        ref var byteInp = ref Static.Offset(ref ByteInp, offsetInp);
+        ref var byteKey = ref Static.Offset(ref ByteKey, offsetKey);
+        ref var byteOut = ref Static.Offset(ref ByteOut, offsetInp);
         return new(ref byteInp, ref byteKey, ref byteOut, ref Progress, Random);
     }
 }

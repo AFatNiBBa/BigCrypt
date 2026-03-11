@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace BigCrypt.Util;
 
@@ -24,7 +23,7 @@ public ref struct SpanChunkEnumerator<T>(ref T first, long count, int chunk)
     {
         var div = Static.DivMod(count, chunk, out var mod);
         if (_index > div) return false;
-        ref var next = ref Unsafe.Add(ref _first, (UIntPtr)(_index * chunk));
+        ref var next = ref Static.Offset(ref _first, _index * chunk);
         var length = _index < div ? chunk : (int)mod;
         Current = MemoryMarshal.CreateSpan(ref next, length);
         _index++;

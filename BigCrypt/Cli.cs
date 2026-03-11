@@ -1,7 +1,6 @@
 ﻿using BigCrypt.Business;
 using BigCrypt.Util;
 using System.IO.MemoryMappedFiles;
-using System.Runtime.CompilerServices;
 
 namespace BigCrypt;
 
@@ -58,7 +57,7 @@ internal static class Cli
 
         await Run(total, (bar, offset, size) =>
         {
-            ref var first = ref Unsafe.Add(ref mmap.First, (UIntPtr)offset);
+            ref var first = ref Static.Offset(ref mmap.First, offset);
             Static.Random(ref first, size);
             Interlocked.Add(ref bar.Value, size);
         });
