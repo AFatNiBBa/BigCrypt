@@ -9,14 +9,15 @@ namespace BigCrypt.Business;
 public static class Crypt
 {
     /// <summary>
-    /// Applies the bitwise XOR operation on a chunk of data.
+    /// Applies an operation on a chunk of data.
     /// Handles the "PacMan Effect" if the key is not long enough to last until the end of the chunk
     /// </summary>
+    /// <typeparam name="T">The operation to perform</typeparam>
     /// <param name="req">The request containing the references to the memory blocks to use in order to perform the operation</param>
     /// <param name="offset">The offset of the chunk</param>
     /// <param name="size">The size of the chunk</param>
     /// <param name="key">The size of the key sequence</param>
-    public static void Xor(Req req, long offset, long size, long key)
+    public static void Op<T>(Req req, long offset, long size, long key) where T : IOperation
     {
         var start = offset % key;
         var available = key - start;
@@ -24,7 +25,7 @@ public static class Crypt
         // Avoids using the "PacMan Effect" if the key is long enough to end this chunk
         if (size <= available)
         {
-            Xor(req.Move(offset, start), size);
+            Op<T>(req.Move(offset, start), size);
             return;
         }
 
@@ -33,26 +34,27 @@ public static class Crypt
             throw new InvalidOperationException("The key needs to be pre-generated when the size of the chunk is bigger than the size of the key");
 
         // Uses the remaining part of the key
-        Xor(req.Move(offset, start), available);
+        Op<T>(req.Move(offset, start), available);
         offset += available;
         size -= available;
 
         // Uses the whole key until a smaller chunk is needed
         var count = Static.DivMod(size, key, out var extra);
         for (long i = 0; i < count; i++, offset += key)
-            Xor(req.Move(offset, 0), key);
+            Op<T>(req.Move(offset, 0), key);
 
         // Processes the remaining part of the input, if any
         if (extra is 0) return;
-        Xor(req.Move(offset, 0), extra);
+        Op<T>(req.Move(offset, 0), extra);
     }
 
     /// <summary>
-    /// Applies the bitwise XOR operation on a chunk of data
+    /// Applies an operation on a chunk of data
     /// </summary>
+    /// <typeparam name="T">The operation to perform</typeparam>
     /// <param name="req">The request containing the references to the memory blocks to use in order to perform the operation</param>
     /// <param name="size">The size of the chunk</param>
-    public static void Xor(Req req, long size)
+    public static void Op<T>(Req req, long size) where T : IOperation
     {
         // Setup of the references at the beginning of the chunk
         var byteInp = new Ref<byte>(ref req.ByteInp);
@@ -70,14 +72,14 @@ public static class Crypt
         // Vectorized loop
         for (long i = 0; i < countVec; i++, vecInp.Next(), vecKey.Next(), vecOut.Next())
         {
-            vecOut.Value = vecInp.Value ^ vecKey.Value;
+            vecOut.Value = T.Combine(vecInp.Value, vecKey.Value);
 
             Interlocked.Add(ref req.Progress, Vector<byte>.Count);
         }
 
         // Scalar loop
         for (var i = 0; i < countExtra; i++, byteInp.Next(), byteKey.Next(), byteOut.Next())
-            byteOut.Value = (byte)(byteInp.Value ^ byteKey.Value);
+            byteOut.Value = T.Combine(byteInp.Value, byteKey.Value);
 
         Interlocked.Add(ref req.Progress, countExtra);
     }
