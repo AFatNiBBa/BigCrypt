@@ -29,7 +29,7 @@ public static class Crypt
             return;
         }
 
-        // Throws if the key needs to be generated, otherwise it would cause race conditions, size the "PacMan Effect" allows multiple threads to use the same blocks of memory
+        // Throws if the key needs to be generated, otherwise it would cause race conditions, since the "PacMan Effect" allows multiple threads to use the same blocks of memory
         if (req.Random) 
             throw new InvalidOperationException("The key needs to be pre-generated when the size of the chunk is bigger than the size of the key");
 
