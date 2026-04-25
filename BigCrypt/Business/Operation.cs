@@ -14,7 +14,9 @@ public interface IOperation
 }
 
 /// <summary>
-/// Implementation of <see cref="IOperation"/> to handle the bitwise XOR
+/// Implementation of <see cref="IOperation"/> that performs the bitwise XOR.
+/// It's its own inverse, so you can't apply the same key multiple times.
+/// Appling the key to the input is the same as applying the input to the key
 /// </summary>
 public class XorOperation : IOperation
 {
@@ -24,7 +26,11 @@ public class XorOperation : IOperation
 }
 
 /// <summary>
-/// Implementation of <see cref="IOperation"/> to handle the wrapped sum
+/// Implementation of <see cref="IOperation"/> that performs the wrapped sum.
+/// Use <see cref="SubOperation"/> to reverse the operation.
+/// The same key can be applied multiple times.
+/// If you apply multiple keys, the order in which they're applied doesn't matter, same goes for the order in which you apply them to reverse the operation.
+/// Appling the key to the input is the same as applying the input to the key
 /// </summary>
 public class SumOperation : IOperation
 {
@@ -34,7 +40,10 @@ public class SumOperation : IOperation
 }
 
 /// <summary>
-/// Implementation of <see cref="IOperation"/> to handle the wrapped subtraction
+/// Implementation of <see cref="IOperation"/> that performs the wrapped subtraction.
+/// Use <see cref="SumOperation"/> to reverse the operation.
+/// The same key can be applied multiple times.
+/// If you apply multiple keys, the order in which they're applied doesn't matter, same goes for the order in which you apply them to reverse the operation
 /// </summary>
 public class SubOperation : IOperation
 {
